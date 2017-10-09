@@ -15,6 +15,7 @@
     "image-to-ascii": "^3.0.8",
     "imagesize": "^1.0.0",
     "jimp": "^0.2.28",
+    "jshint": "^2.9.5",
     "picture-tube": "^1.0.0",
     "shelljs": "^0.7.8",
     "terminal-kit": "^1.13.11",
