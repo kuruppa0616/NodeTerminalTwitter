@@ -1,6 +1,7 @@
 // 'use strict';
 const Twitter = require('twitter');
 const term = require('terminal-kit').terminal;
+term.windowTitle("NodeTerminalTwitter");
 const imageToAscii = require("image-to-ascii");
 const fs = require('fs');
 
@@ -20,11 +21,12 @@ let isTweetCache = false;
 let tweetCache = [];
 
 term.bold("START!!!");
+newline();
 
 //キー入力待受
 term.grabInput();
 
-term.on('key', function (name, matches, data) {
+term.on('key', (name, matches, data) => {
 
     //ツイッター終了
     if (name === 'CTRL_C') {
@@ -32,55 +34,55 @@ term.on('key', function (name, matches, data) {
 
         //Tweet入力
     } else if (name === 'CTRL_T') {
-        isTweetCache = true;
-        term("\nInput your kuso tweet:>>");
-        newline();
 
-        //入力フィールド表示
-        term.inputField({
-            cancelable: true,
-            maxLength: 140
-        }, function (error, input) {
-
-            if (input) {
-                client.post('statuses/update', {
-                    status: input
-                }, function (error, tweet, response) {
-                    if (!error) {
-                        newline();
-                        term("Success!");
-                        newline();
-                    } else {
-                        term(error);
-                    }
-                });
-            } else {
-                term("Cancelled");
-                newline();
-            }
-
-            drawBorderLine();
-
-            isTweetCache = false;
-
-            for (let temp of tweetCache) {
-                printTweet(temp);
-            }
-
-            tweetCache = [];
-        });
+        inputTweet();
     }
 
 });
 
 startStream();
 
+function inputTweet() {
+    isTweetCache = true;
+    term("\nInput your kuso tweet:>>");
+    newline();
+    //入力フィールド表示
+    term.inputField({
+        cancelable: true,
+        maxLength: 140
+    }, (error, input) => {
+        if (input) {
+            client.post('statuses/update', {
+                status: input
+            }, (error, tweet, response) => {
+                if (!error) {
+                    newline();
+                    term("Success!");
+                    newline();
+                } else {
+                    term(error);
+                }
+            });
+        } else {
+            term("Cancelled");
+            newline();
+        }
+        // drawBorderLine();
+        isTweetCache = false;
+
+        for (let temp of tweetCache) {
+            printTweet(temp);
+        }
+        tweetCache = [];
+    });
+}
+
 //main処理ここまで
 
 //ストリーミング処理
 function startStream() {
     let stream = client.stream('user');
-    stream.on('data', function (tweet) {
+    stream.on('data', (tweet) => {
 
         // 入力状態のときはTweetを表示せずリストにキャッシュ
         if (isTweetCache) {
@@ -96,44 +98,52 @@ function startStream() {
 //Tweet表示
 function printTweet(tweet) {
 
+    Promise.resolve(tweet)
+        .then(printRetweet)
+        .then(printUserName)
+        .then(printBody)
+        .then(printImage)
+        .then(printQuoted)
+        .then(() => {
+            drawBorderLine()
+            newline();
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+}
+
+function printRetweet(tweet) {
     //リツートだったときは、名前を表示して元ツイートの詳細を表示
     if (tweet.retweeted_status) {
         term.dim("RT:" + tweet.user.name + " Retweeted");
         newline();
         tweet = tweet.retweeted_status;
     }
+    return tweet;
+}
 
-    //ユーザーネーム表示
-    printUserName(tweet);
-
-    newline();
-
-    //本文表示
-    printBody(tweet);
-    // term(tweet.text);
-
-    newline();
-
-    //AA表示
-    printImage(tweet);
-
+function printQuoted(tweet) {
     //引用リツイートだった場合元ツイート表示
-    if (tweet.quoted_status) {
+    if (tweet.is_quote_status) {
+        tweet = tweet.quoted_status;
         term("Quoted>>");
-        printUserName(tweet.quoted_status.user);
-
-        newline();
-        term(tweet.quoted_status.text);
-        newline();
+        Promise.resolve(tweet)
+            .then(printUserName)
+            .then(printBody)
+            .then(printImage)
+            .catch((error) => {
+                console.error(error);
+            });
     }
-
-    drawBorderLine()
-    newline();
+    return tweet;
 }
 
 function printBody(tweet) {
     //本文を表示
     term(tweet.text);
+    newline();
+    return tweet;
 }
 
 //ユーザーネーム表示
@@ -142,7 +152,7 @@ function printUserName(tweet) {
 
     //公式アカウント判定
     if (tweet.user.verified) {
-        term(" 公 ");
+        term(" ✔ ");
     }
 
     // 鍵アカウント判定
@@ -155,31 +165,59 @@ function printUserName(tweet) {
 
     //時刻表示
     term.dim("\t" + toLocaleString(new Date(tweet.created_at)));
+    newline();
+    return tweet;
 }
 
 //画像表示
 function printImage(tweet) {
     //Tweetに画像が含まれるかの判定
     if (tweet.extended_entities && tweet.extended_entities.media) {
-        //添付されてる画像を全て取り出し
-        for (medium of tweet.extended_entities.media) {
+        //添付されてるメディア要素を全て取り出し
+        let tasks = [];
+        for (let medium of tweet.extended_entities.media) {
+            //画像ならアスキー変換
             if (medium.type == "photo") {
-                imageToAscii(medium.media_url + ":thumb", {
-                    size: {
-                        width: 30
-                    }
-                }, (err, converted) => {
-                    term(err || converted);
-                    newline();
-                    term(medium.media_url);
-                    newline();
-                    drawBorderLine()
-                });
+                //アスキー変換のプロミス関数を登録
+                tasks.unshift(printAsciiPromise(medium));
             }
         }
+        // 登録した関数を逐次処理
+        sequenceTasks(tasks);
     }
+    return tweet;
 }
 
+//アスキーで画像を表示のプロミス版
+function printAsciiPromise(medium) {
+    new Promise((resolve, reject) => {
+        imageToAscii(medium.media_url + ":thumb", {
+            size: {
+                width: 30
+            }
+        }, (err, converted) => {
+            term(err || converted);
+            newline();
+            term(medium.media_url);
+            newline();
+            drawBorderLine();
+            resolve();
+        });
+    });
+
+}
+
+//渡されたpromise関数を逐次処理
+function sequenceTasks(tasks) {
+    function recordValue(results, value) {
+        results.push(value);
+        return results;
+    }
+    var pushValue = recordValue.bind(null, []);
+    return tasks.reduce((promise, task) => {
+        return promise.then(task).then(pushValue);
+    }, Promise.resolve());
+}
 
 //日付フォーマット変換
 function toLocaleString(date) {
