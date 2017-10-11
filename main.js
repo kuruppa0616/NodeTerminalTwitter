@@ -69,11 +69,14 @@ function inputTweet() {
         }
         // drawBorderLine();
         isTweetCache = false;
-
+        // let tasks = [];
         for (let temp of tweetCache) {
+            // tasks.unshift(printTweet(temp));
             printTweet(temp);
         }
         tweetCache = [];
+        // sequenceTasks(tasks);
+
     });
 }
 
@@ -98,19 +101,37 @@ function startStream() {
 //Tweet表示
 function printTweet(tweet) {
 
-    Promise.resolve(tweet)
-        .then(printRetweet)
-        .then(printUserName)
-        .then(printBody)
-        .then(printImage)
-        .then(printQuoted)
-        .then(() => {
-            drawBorderLine()
-            newline();
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+    tweet = printRetweet(tweet);
+    printUserName(tweet);
+    printBody(tweet);
+    printImage(tweet);
+    printQuoted(tweet);
+    drawBorderLine()
+    newline();
+}
+
+//Tweet表示
+function printTweetPromise(tweet) {
+    new Promise((resolve, reject) => {
+        Promise.resolve(tweet)
+            .then(printRetweet)
+            .then(printUserName)
+            .then(printBody)
+            .then(printImage)
+            .then(printQuoted)
+            .then(() => {
+                drawBorderLine()
+                newline();
+                return tweet;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }, (err, converted) => {
+
+        resolve();
+    });
+
 }
 
 function printRetweet(tweet) {
