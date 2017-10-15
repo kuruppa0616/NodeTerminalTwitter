@@ -19,6 +19,7 @@
     "picture-tube": "^1.0.0",
     "shelljs": "^0.7.8",
     "terminal-kit": "^1.13.11",
+    "twit": "^2.2.9",
     "twitter": "^1.7.1"
   }
 }
