@@ -27,8 +27,11 @@ const MenuOptions = {
 	selectedStyle: Term.inverse,
 };
 
+//入力状態中に流れてくるTweetを一時保存しとくための奴ら
 let isTweetCache = false;
 let tweetCache = [];
+//RTとファボ用のTweetIDを保管するためのリスト
+let tweetIdList = [];
 
 
 Term.windowTitle("NodeTerminalTwitter");
@@ -53,16 +56,16 @@ Term.on("key", (name) => {
 
 			switch (response.selectedIndex) {
 				case 0:
-					inputTweet();
+					inputTweet([postTweet], "Input your kuso tweet");
 					break;
 				case 1:
-					Term("1");
+					inputTweet([reTweet], "Input tweet No");
 					break;
 				case 2:
-					Term("2");
+					inputTweet([favTweet], "Input tweet No");
 					break;
 				case 3:
-					Term("3");
+					inputTweet([reTweet, favTweet], "Input tweet No");
 					break;
 				case 4:
 					newline();
@@ -71,11 +74,8 @@ Term.on("key", (name) => {
 					releaseCache();
 					break;
 			}
-
-
 		});
 	}
-
 });
 
 //ストリーム開始
@@ -83,9 +83,11 @@ startStream();
 
 //メイン処理ここまで
 
-function inputTweet() {
+
+//入力された値を、引数としてリストで受け取った関数に渡し実行する
+function inputTweet(funcList, message) {
 	newline();
-	Term("Input your kuso tweet:>>");
+	Term(message + ":>>");
 	newline();
 	//入力フィールド表示
 	Term.inputField({
@@ -93,21 +95,15 @@ function inputTweet() {
 		maxLength: 140
 	}, (error, input) => {
 		if (input) {
-			postTweet(input);
+			for (let func of funcList) {
+				func(input);
+			}
 		} else {
 			Term("Cancelled");
 			newline();
 		}
 		releaseCache();
 	});
-}
-
-function releaseCache() {
-	isTweetCache = false;
-	for (let temp of tweetCache) {
-		printTweet(temp);
-	}
-	tweetCache = [];
 }
 
 //Tweet投稿
@@ -125,6 +121,34 @@ function postTweet(input) {
 		}
 	});
 }
+
+//指定idをリツイートする
+function reTweet(tweetID) {
+	Client.post("statuses/retweet/:id", {
+		id: tweetIdList[tweetID - 1]
+	}, (err, data) => {
+		console.log(data);
+	});
+}
+
+// 指定idをふぁぼる
+function favTweet(tweetID) {
+	Client.post("favorites/create", {
+		id: tweetIdList[tweetID - 1]
+	}, (err, data) => {
+		console.log(data);
+	});
+}
+
+
+function releaseCache() {
+	isTweetCache = false;
+	for (let temp of tweetCache) {
+		printTweet(temp);
+	}
+	tweetCache = [];
+}
+
 
 //main処理ここまで
 
@@ -254,6 +278,8 @@ function printUserName(tweet) {
 
 	//時刻表示
 	Term.dim("\t" + toLocaleString(new Date(tweet.created_at)));
+
+	Term.dim("\t No:" + tweetIdList.push(tweet.id_str));
 	newline();
 	return tweet;
 }
