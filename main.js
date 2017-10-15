@@ -2,36 +2,43 @@
 
 console.log("Loading module...");
 
-const TWITTER = require("twit");
-const TERM = require("terminal-kit").terminal;
-const IMAGE_TO_ASCII = require("image-to-ascii");
-const FS = require("fs");
+const Twitter = require("twit");
+const Term = require("terminal-kit").terminal;
+const ImageToAscii = require("image-to-ascii");
+const Fs = require("fs");
 
 console.log("Login twitter...");
 
 //認証情報を書き込んだjson読み込み
-let json = FS.readFileSync("./Auth.json", "utf-8");
-let auth = JSON.parse(json);
+const Json = Fs.readFileSync("./Auth.json", "utf-8");
+const Auth = JSON.parse(Json);
 
 //ログイン認証
-const CLIENT = new TWITTER({
-	consumer_key: auth.consumer_key,
-	consumer_secret: auth.consumer_secret,
-	access_token: auth.access_token_key,
-	access_token_secret: auth.access_token_secret
+const Client = new Twitter({
+	consumer_key: Auth.consumer_key,
+	consumer_secret: Auth.consumer_secret,
+	access_token: Auth.access_token_key,
+	access_token_secret: Auth.access_token_secret
 });
+
+const MenuItems = ["Tweet", "RT", "Fav", "RT & Fav", "Cancel"];
+const MenuOptions = {
+	style: Term.blue,
+	selectedStyle: Term.inverse,
+};
 
 let isTweetCache = false;
 let tweetCache = [];
 
-TERM.windowTitle("NodeTerminalTwitter");
-TERM.bold("START!!!");
+
+Term.windowTitle("NodeTerminalTwitter");
+Term.bold("START!!!");
 newline();
 
 //キー入力待受
-TERM.grabInput();
+Term.grabInput();
 
-TERM.on("key", (name) => {
+Term.on("key", (name) => {
 
 	//ツイッター終了
 	if (name === "CTRL_C") {
@@ -40,50 +47,81 @@ TERM.on("key", (name) => {
 		//Tweet入力
 	} else if (name === "CTRL_T") {
 
-		inputConsole();
+		isTweetCache = true;
+
+		Term.singleLineMenu(MenuItems, MenuOptions, (error, response) => {
+
+			switch (response.selectedIndex) {
+				case 0:
+					inputTweet();
+					break;
+				case 1:
+					Term("1");
+					break;
+				case 2:
+					Term("2");
+					break;
+				case 3:
+					Term("3");
+					break;
+				case 4:
+					newline();
+					Term("Cancelled");
+					newline();
+					releaseCache();
+					break;
+			}
+
+
+		});
 	}
 
 });
 
+//ストリーム開始
 startStream();
 
+//メイン処理ここまで
 
-function inputConsole() {
-	isTweetCache = true;
-
+function inputTweet() {
 	newline();
-	TERM("Input your kuso tweet:>>");
+	Term("Input your kuso tweet:>>");
 	newline();
 	//入力フィールド表示
-	TERM.inputField({
+	Term.inputField({
 		cancelable: true,
 		maxLength: 140
 	}, (error, input) => {
 		if (input) {
 			postTweet(input);
 		} else {
-			TERM("Cancelled");
+			Term("Cancelled");
 			newline();
 		}
-		isTweetCache = false;
-		for (let temp of tweetCache) {
-			printTweet(temp);
-		}
-		tweetCache = [];
+		releaseCache();
 	});
+}
+
+function releaseCache() {
+	isTweetCache = false;
+	for (let temp of tweetCache) {
+		printTweet(temp);
+	}
+	tweetCache = [];
 }
 
 //Tweet投稿
 function postTweet(input) {
-	CLIENT.post("statuses/update", {
+
+	Client.post("statuses/update", {
 		status: input
 	}, (error) => {
 		if (!error) {
 			newline();
-			TERM("Success!");
+			Term("Success!");
 			newline();
 		} else {
-			TERM(error);
+			Term(error);
 		}
 	});
 }
@@ -92,7 +130,7 @@ function postTweet(input) {
 
 //ストリーミング処理
 function startStream() {
-	let stream = CLIENT.stream("user");
+	let stream = Client.stream("user");
 	stream.on("tweet", (tweet) => {
 		// 入力状態のときはTweetを表示せずリストにキャッシュ
 		if (isTweetCache) {
@@ -101,7 +139,7 @@ function startStream() {
 			printTweet(tweet);
 		}
 	});
-	stream.on("error", function(e) {
+	stream.on("error", (e) => {
 		console.log(e);
 	});
 }
@@ -123,7 +161,7 @@ function printTweet(tweet) {
 function printRetweet(tweet) {
 	//リツートだったときは、名前を表示して元ツイートの詳細を表示
 	if (tweet.retweeted_status) {
-		TERM.dim("RT:" + tweet.user.name + " Retweeted");
+		Term.dim("RT:" + tweet.user.name + " Retweeted");
 		newline();
 		tweet = tweet.retweeted_status;
 	}
@@ -135,7 +173,7 @@ function printQuoted(tweet) {
 	//引用リツイートだった場合元ツイート表示
 	if (tweet.is_quote_status) {
 		tweet = tweet.quoted_status;
-		TERM("Quoted>>");
+		Term("Quoted>>");
 		newline();
 		printUserName(tweet);
 		printBody(tweet);
@@ -182,15 +220,15 @@ function printBody(tweet) {
 		let textList = text.split(reg);
 		for (let str of textList) {
 			if (str.search(reg) != -1) {
-				TERM.blue(str);
+				Term.blue(str);
 			} else {
-				TERM(str);
+				Term(str);
 			}
 		}
 
 		//ない場合は全部一気に表示
 	} else {
-		TERM(text);
+		Term(text);
 	}
 
 	newline();
@@ -199,23 +237,23 @@ function printBody(tweet) {
 
 //ユーザーネーム表示
 function printUserName(tweet) {
-	TERM.bold(tweet.user.name);
+	Term.bold(tweet.user.name);
 
 	//公式アカウント判定
 	if (tweet.user.verified) {
-		TERM(" ✔ ");
+		Term(" ✔ ");
 	}
 
 	// 鍵アカウント判定
 	if (tweet.user.protected) {
-		TERM(" 鍵 ");
+		Term(" 鍵 ");
 	}
 
 	//スクリーンネーム表示
-	TERM.dim(" @" + tweet.user.screen_name);
+	Term.dim(" @" + tweet.user.screen_name);
 
 	//時刻表示
-	TERM.dim("\t" + toLocaleString(new Date(tweet.created_at)));
+	Term.dim("\t" + toLocaleString(new Date(tweet.created_at)));
 	newline();
 	return tweet;
 }
@@ -247,14 +285,14 @@ function isMedia(tweet) {
 //アスキーで画像を表示のプロミス版
 function printAsciiPromise(medium) {
 	new Promise((resolve) => {
-		IMAGE_TO_ASCII(medium.media_url + ":thumb", {
+		ImageToAscii(medium.media_url + ":thumb", {
 			size: {
 				width: 30
 			}
 		}, (err, converted) => {
-			TERM(err || converted);
+			Term(err || converted);
 			newline();
-			TERM(medium.media_url);
+			Term(medium.media_url);
 			newline();
 			drawBorderLine();
 			resolve();
@@ -286,7 +324,7 @@ function toLocaleString(date) {
 
 //画面幅一杯のラインを引く
 function drawBorderLine() {
-	TERM.dim("―".repeat(TERM.width));
+	Term.dim("―".repeat(Term.width));
 	newline();
 }
 
@@ -297,8 +335,8 @@ function newline() {
 
 //終了
 function terminate() {
-	TERM.grabInput(false);
-	TERM("good bye");
+	Term.grabInput(false);
+	Term("good bye");
 	newline();
 	setTimeout(function() {
 		process.exit();
