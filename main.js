@@ -27,6 +27,14 @@ const MenuOptions = {
 	selectedStyle: Term.inverse,
 };
 
+// const muteList = Client.get("mutes/users/ids")
+// 	.then((result) => {
+// 		// Term(result.data);
+// 		// console.log(result.data);
+// 		resolve(result.data);
+// 	});
+// Term(muteList);
+
 //入力状態中に流れてくるTweetを一時保存しとくための奴ら
 let isTweetCache = false;
 let tweetCache = [];
@@ -58,15 +66,19 @@ Term.on("key", (name) => {
 				case 0:
 					inputTweet([postTweet], "Input your kuso tweet");
 					break;
+
 				case 1:
 					inputTweet([reTweet], "Input tweet No");
 					break;
+
 				case 2:
 					inputTweet([favTweet], "Input tweet No");
 					break;
+
 				case 3:
 					inputTweet([reTweet, favTweet], "Input tweet No");
 					break;
+
 				case 4:
 					newline();
 					Term("Cancelled");
@@ -114,7 +126,7 @@ function postTweet(input) {
 	}, (error) => {
 		if (!error) {
 			newline();
-			Term("Success!");
+			Term("Tweet Success!");
 			newline();
 		} else {
 			Term(error);
@@ -126,8 +138,14 @@ function postTweet(input) {
 function reTweet(tweetID) {
 	Client.post("statuses/retweet/:id", {
 		id: tweetIdList[tweetID - 1]
-	}, (err, data) => {
-		console.log(data);
+	}, (error) => {
+		if (!error) {
+			newline();
+			Term("RT Success!");
+			newline();
+		} else {
+			Term(error);
+		}
 	});
 }
 
@@ -135,8 +153,14 @@ function reTweet(tweetID) {
 function favTweet(tweetID) {
 	Client.post("favorites/create", {
 		id: tweetIdList[tweetID - 1]
-	}, (err, data) => {
-		console.log(data);
+	}, (error) => {
+		if (!error) {
+			newline();
+			Term("Fav Success!");
+			newline();
+		} else {
+			Term(error);
+		}
 	});
 }
 
