@@ -2,38 +2,24 @@
 
 console.log("Loading module...");
 
-const Twitter = require("twit");
+
 const Term = require("terminal-kit").terminal;
 const ImageToAscii = require("image-to-ascii");
-const Fs = require("fs");
+
+const Auth = require("./Auth");
+// const TweetPrinter = require("./TweetPrinter");
 
 console.log("Login twitter...");
 
-//認証情報を書き込んだjson読み込み
-const Json = Fs.readFileSync("./Auth.json", "utf-8");
-const Auth = JSON.parse(Json);
+let client = new Auth("./Auth.json").login();
+// let tweetPrinter = new TweetPrinter();
 
-//ログイン認証
-const Client = new Twitter({
-	consumer_key: Auth.consumer_key,
-	consumer_secret: Auth.consumer_secret,
-	access_token: Auth.access_token_key,
-	access_token_secret: Auth.access_token_secret
-});
 
 const MenuItems = ["Tweet", "RT", "Fav", "RT & Fav", "Cancel"];
 const MenuOptions = {
 	style: Term.blue,
 	selectedStyle: Term.inverse,
 };
-
-// const muteList = Client.get("mutes/users/ids")
-// 	.then((result) => {
-// 		// Term(result.data);
-// 		// console.log(result.data);
-// 		resolve(result.data);
-// 	});
-// Term(muteList);
 
 //入力状態中に流れてくるTweetを一時保存しとくための奴ら
 let isTweetCache = false;
@@ -121,7 +107,7 @@ function inputTweet(funcList, message) {
 //Tweet投稿
 function postTweet(input) {
 
-	Client.post("statuses/update", {
+	client.post("statuses/update", {
 		status: input
 	}, (error) => {
 		if (!error) {
@@ -136,7 +122,7 @@ function postTweet(input) {
 
 //指定idをリツイートする
 function reTweet(tweetID) {
-	Client.post("statuses/retweet/:id", {
+	client.post("statuses/retweet/:id", {
 		id: tweetIdList[tweetID - 1]
 	}, (error) => {
 		if (!error) {
@@ -151,7 +137,7 @@ function reTweet(tweetID) {
 
 // 指定idをふぁぼる
 function favTweet(tweetID) {
-	Client.post("favorites/create", {
+	client.post("favorites/create", {
 		id: tweetIdList[tweetID - 1]
 	}, (error) => {
 		if (!error) {
@@ -178,7 +164,7 @@ function releaseCache() {
 
 //ストリーミング処理
 function startStream() {
-	let stream = Client.stream("user");
+	let stream = client.stream("user");
 	stream.on("tweet", (tweet) => {
 		// 入力状態のときはTweetを表示せずリストにキャッシュ
 		if (isTweetCache) {
@@ -289,7 +275,8 @@ function printUserName(tweet) {
 
 	//公式アカウント判定
 	if (tweet.user.verified) {
-		Term(" ✔ ");
+		Term.green(" ✔ ");
+
 	}
 
 	// 鍵アカウント判定
@@ -313,16 +300,13 @@ function printImage(tweet) {
 	//Tweetに画像が含まれるかの判定
 	if (isMedia(tweet)) {
 		//添付されてるメディア要素を全て取り出し
-		let tasks = [];
 		for (let medium of tweet.extended_entities.media) {
 			//画像ならアスキー変換
 			if (medium.type == "photo") {
 				//アスキー変換のプロミス関数を登録
-				tasks.unshift(printAsciiPromise(medium));
+				printAscii(medium);
 			}
 		}
-		// 登録した関数を逐次処理
-		sequenceTasks(tasks);
 	}
 	return tweet;
 }
@@ -332,34 +316,19 @@ function isMedia(tweet) {
 	return tweet.extended_entities && tweet.extended_entities.media;
 }
 
-//アスキーで画像を表示のプロミス版
-function printAsciiPromise(medium) {
-	new Promise((resolve) => {
-		ImageToAscii(medium.media_url + ":thumb", {
-			size: {
-				width: 30
-			}
-		}, (err, converted) => {
-			Term(err || converted);
-			newline();
-			Term(medium.media_url);
-			newline();
-			drawBorderLine();
-			resolve();
-		});
-	});
-}
+function printAscii(medium) {
+	ImageToAscii(medium.media_url + ":thumb", {
+		size: {
+			width: 30
+		}
+	}, (err, converted) => {
+		Term(err || converted);
+		newline();
+		Term(medium.media_url);
+		newline();
+		drawBorderLine();
 
-//渡されたpromise関数を逐次処理
-function sequenceTasks(tasks) {
-	function recordValue(results, value) {
-		results.push(value);
-		return results;
-	}
-	var pushValue = recordValue.bind(null, []);
-	return tasks.reduce((promise, task) => {
-		return promise.then(task).then(pushValue);
-	}, Promise.resolve());
+	});
 }
 
 //日付フォーマット変換
