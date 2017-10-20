@@ -1,13 +1,16 @@
 /* eslint-disable no-console,indent */
 
 const Term = require("terminal-kit").terminal;
-const ImageToAscii = require("image-to-ascii");
 
 const TweetCacheController = require("./TweetCacheController");
 const TweetIdListController = require("./TweetIdListController");
+const AsciiPrinter = require("./AsciiPrinter");
 
 module.exports = class TweetPrinter {
-	constructor() {}
+	constructor() {
+		this.asciiPrinter = new AsciiPrinter();
+
+	}
 
 	printTweet(tweet) {
 
@@ -41,7 +44,7 @@ module.exports = class TweetPrinter {
 			this.printBody(tweet);
 			this.printImage(tweet);
 		}
-		return tweet;
+
 	}
 
 	//Tweet本文を表示する
@@ -94,7 +97,6 @@ module.exports = class TweetPrinter {
 		}
 
 		this.newline();
-		return tweet;
 	}
 
 	//ユーザーネーム表示
@@ -120,7 +122,6 @@ module.exports = class TweetPrinter {
 
 		Term.dim("\t No:" + TweetIdListController.addID(tweet.id_str));
 		this.newline();
-		return tweet;
 	}
 
 	//画像表示
@@ -132,11 +133,11 @@ module.exports = class TweetPrinter {
 				//画像ならアスキー変換
 				if (medium.type == "photo") {
 					//アスキー変換のプロミス関数を登録
-					this.printAscii(medium);
+					this.asciiPrinter.printAscii(medium);
+
 				}
 			}
 		}
-		return tweet;
 	}
 
 	//Tweetにメディアが含まれているかの判定
@@ -144,20 +145,7 @@ module.exports = class TweetPrinter {
 		return tweet.extended_entities && tweet.extended_entities.media;
 	}
 
-	printAscii(medium) {
-		ImageToAscii(medium.media_url + ":thumb", {
-			size: {
-				width: 30
-			}
-		}, (err, converted) => {
-			Term(err || converted);
-			this.newline();
-			Term(medium.media_url);
-			this.newline();
-			this.drawBorderLine();
 
-		});
-	}
 	//画面幅一杯のラインを引く
 	drawBorderLine() {
 		Term.dim("―".repeat(Term.width));
