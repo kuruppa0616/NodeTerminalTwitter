@@ -10,6 +10,7 @@ const TweetIdListController = require("./TweetIdListController");
 const TweetPrinter = require("./TweetPrinter");
 const tweetPrinter = new TweetPrinter();
 
+console.log(TweetIdListController.test);
 
 console.log("Login twitter...");
 
@@ -98,6 +99,7 @@ function inputTweet(funcList, message) {
 		}
 		tweetPrinter.releaseCache();
 	});
+
 }
 
 //Tweet投稿

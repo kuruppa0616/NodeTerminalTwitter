@@ -1,9 +1,14 @@
 /* eslint-disable no-console,indent */
+
 const ImageToAscii = require("image-to-ascii");
 const Term = require("terminal-kit").terminal;
-
+const PrintUtility = require("./PrintUtilities");
 
 module.exports = class AsciiPrinter {
+	constructor() {
+		this.printUtility = new PrintUtility();
+	}
+
 	printAscii(medium) {
 		ImageToAscii(medium.media_url + ":thumb", {
 			size: {
@@ -11,21 +16,11 @@ module.exports = class AsciiPrinter {
 			}
 		}, (err, converted) => {
 			Term(err || converted);
-			this.newline();
+			this.printUtility.newline();
 			Term(medium.media_url);
-			this.newline();
-			this.drawBorderLine();
+			this.printUtility.newline();
+			this.printUtility.drawBorderLine();
 
 		});
-	}
-
-	drawBorderLine() {
-		Term.dim("―".repeat(Term.width));
-		this.newline();
-	}
-
-	//改行
-	newline() {
-		console.log();
 	}
 };

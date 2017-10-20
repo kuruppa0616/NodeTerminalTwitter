@@ -5,11 +5,12 @@ const Term = require("terminal-kit").terminal;
 const TweetCacheController = require("./TweetCacheController");
 const TweetIdListController = require("./TweetIdListController");
 const AsciiPrinter = require("./AsciiPrinter");
+const PrintUtility = require("./PrintUtilities");
 
 module.exports = class TweetPrinter {
 	constructor() {
 		this.asciiPrinter = new AsciiPrinter();
-
+		this.printUtility = new PrintUtility();
 	}
 
 	printTweet(tweet) {
@@ -19,15 +20,15 @@ module.exports = class TweetPrinter {
 		this.printBody(tweet);
 		this.printImage(tweet);
 		this.printQuoted(tweet);
-		this.drawBorderLine();
-		this.newline();
-
+		this.printUtility.drawBorderLine();
+		this.printUtility.newline();
 	}
+
 	printRetweet(tweet) {
 		//リツートだったときは、名前を表示して元ツイートの詳細を表示
 		if (tweet.retweeted_status) {
 			Term.dim("RT:" + tweet.user.name + " Retweeted");
-			this.newline();
+			this.printUtility.newline();
 			tweet = tweet.retweeted_status;
 		}
 		return tweet;
@@ -39,12 +40,11 @@ module.exports = class TweetPrinter {
 		if (tweet.is_quote_status) {
 			tweet = tweet.quoted_status;
 			Term("Quoted>>");
-			this.newline();
+			this.printUtility.newline();
 			this.printUserName(tweet);
 			this.printBody(tweet);
 			this.printImage(tweet);
 		}
-
 	}
 
 	//Tweet本文を表示する
@@ -96,7 +96,7 @@ module.exports = class TweetPrinter {
 			Term(text);
 		}
 
-		this.newline();
+		this.printUtility.newline();
 	}
 
 	//ユーザーネーム表示
@@ -118,10 +118,10 @@ module.exports = class TweetPrinter {
 		Term.dim(" @" + tweet.user.screen_name);
 
 		//時刻表示
-		Term.dim("\t" + this.toLocaleString(new Date(tweet.created_at)));
+		Term.dim("\t" + this.printUtility.toLocaleString(new Date(tweet.created_at)));
 
 		Term.dim("\t No:" + TweetIdListController.addID(tweet.id_str));
-		this.newline();
+		this.printUtility.newline();
 	}
 
 	//画像表示
@@ -145,26 +145,6 @@ module.exports = class TweetPrinter {
 		return tweet.extended_entities && tweet.extended_entities.media;
 	}
 
-
-	//画面幅一杯のラインを引く
-	drawBorderLine() {
-		Term.dim("―".repeat(Term.width));
-		this.newline();
-	}
-
-	//改行
-	newline() {
-		console.log();
-	}
-
-	toLocaleString(date) {
-		return [
-				date.getFullYear(),
-				date.getMonth() + 1,
-				date.getDate()
-			].join("/") + " " +
-			date.toLocaleTimeString();
-	}
 	releaseCache() {
 		TweetCacheController.setIsTweetCache(false);
 		for (let temp of TweetCacheController.getTweetCacheList()) {
