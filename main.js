@@ -2,18 +2,17 @@
 
 console.log("Loading module...");
 
-
 const Term = require("terminal-kit").terminal;
 const ImageToAscii = require("image-to-ascii");
 
 const Auth = require("./Auth");
-// const TweetPrinter = require("./TweetPrinter");
+const TweetCacheController = require("./TweetCacheController");
+// let auth = new Auth();
 
 console.log("Login twitter...");
 
-let client = new Auth("./Auth.json").login();
-// let tweetPrinter = new TweetPrinter();
-
+Auth.login("./Auth.json");
+let client = Auth.getClient();
 
 const MenuItems = ["Tweet", "RT", "Fav", "RT & Fav", "Cancel"];
 const MenuOptions = {
