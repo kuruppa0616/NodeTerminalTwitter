@@ -10,10 +10,12 @@ const TweetCacheController = require("./TweetCacheController");
 const TweetIdListController = require("./TweetIdListController");
 const TweetPrinter = require("./TweetPrinter");
 const PostTwitter = require("./PostTwitter");
+const StreamTwitter = require("./StreamTwitter");
 
 const tweetPrinter = new TweetPrinter();
 const postTwitter = new PostTwitter();
 const printUtility = new PrintUtility();
+const streamTwitter = new StreamTwitter();
 
 
 console.log(TweetIdListController.test);
@@ -21,7 +23,6 @@ console.log(TweetIdListController.test);
 console.log("Login twitter...");
 
 Auth.login("./Auth.json");
-let client = Auth.getClient();
 
 const MenuItems = ["Tweet", "RT", "Fav", "RT & Fav", "Cancel"];
 const MenuOptions = {
@@ -33,6 +34,8 @@ const MenuOptions = {
 Term.windowTitle("NodeTerminalTwitter");
 Term.bold("START!!!");
 printUtility.newline();
+
+streamTwitter.startStream();
 
 //キー入力待受
 Term.grabInput();
@@ -53,9 +56,6 @@ Term.on("key", (name) => {
 		});
 	}
 });
-
-//ストリーム開始
-startStream();
 
 async function switchMenuProcess(response) {
 
@@ -108,21 +108,7 @@ function inputPost(message) {
 
 //main処理ここまで
 
-//ストリーミング処理
-function startStream() {
-	let stream = client.stream("user");
-	stream.on("tweet", (tweet) => {
-		// 入力状態のときはTweetを表示せずリストにキャッシュ
-		if (TweetCacheController.getIsTweetCache()) {
-			TweetCacheController.addCache(tweet);
-		} else {
-			tweetPrinter.printTweet(tweet);
-		}
-	});
-	stream.on("error", (e) => {
-		console.log(e);
-	});
-}
+
 
 //終了
 function terminate() {
