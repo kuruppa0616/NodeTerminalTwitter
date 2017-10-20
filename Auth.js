@@ -1,3 +1,4 @@
+/* eslint-disable no-console,indent */
 const Fs = require("fs");
 const Twitter = require("twit");
 

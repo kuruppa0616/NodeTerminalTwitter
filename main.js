@@ -7,7 +7,6 @@ const ImageToAscii = require("image-to-ascii");
 
 const Auth = require("./Auth");
 const TweetCacheController = require("./TweetCacheController");
-// let auth = new Auth();
 
 console.log("Login twitter...");
 
@@ -21,8 +20,8 @@ const MenuOptions = {
 };
 
 //入力状態中に流れてくるTweetを一時保存しとくための奴ら
-let isTweetCache = false;
-let tweetCache = [];
+// let isTweetCache = false;
+// let tweetCache = [];
 //RTとファボ用のTweetIDを保管するためのリスト
 let tweetIdList = [];
 
@@ -43,7 +42,8 @@ Term.on("key", (name) => {
 		//Tweet入力
 	} else if (name === "CTRL_T") {
 
-		isTweetCache = true;
+
+		TweetCacheController.setIsTweetCache(true);
 
 		Term.singleLineMenu(MenuItems, MenuOptions, (error, response) => {
 
@@ -151,11 +151,11 @@ function favTweet(tweetID) {
 
 
 function releaseCache() {
-	isTweetCache = false;
-	for (let temp of tweetCache) {
+	TweetCacheController.setIsTweetCache(false);
+	for (let temp of TweetCacheController.getTweetCacheList()) {
 		printTweet(temp);
 	}
-	tweetCache = [];
+	TweetCacheController.clearTweetCacheList();
 }
 
 
@@ -166,8 +166,8 @@ function startStream() {
 	let stream = client.stream("user");
 	stream.on("tweet", (tweet) => {
 		// 入力状態のときはTweetを表示せずリストにキャッシュ
-		if (isTweetCache) {
-			tweetCache.push(tweet);
+		if (TweetCacheController.getIsTweetCache()) {
+			TweetCacheController.addCache(tweet);
 		} else {
 			printTweet(tweet);
 		}
