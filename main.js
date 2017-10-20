@@ -7,6 +7,7 @@ const ImageToAscii = require("image-to-ascii");
 
 const Auth = require("./Auth");
 const TweetCacheController = require("./TweetCacheController");
+const TweetIdListController = require("./TweetIdListController");
 
 console.log("Login twitter...");
 
@@ -18,12 +19,6 @@ const MenuOptions = {
 	style: Term.blue,
 	selectedStyle: Term.inverse,
 };
-
-//入力状態中に流れてくるTweetを一時保存しとくための奴ら
-// let isTweetCache = false;
-// let tweetCache = [];
-//RTとファボ用のTweetIDを保管するためのリスト
-let tweetIdList = [];
 
 
 Term.windowTitle("NodeTerminalTwitter");
@@ -122,7 +117,7 @@ function postTweet(input) {
 //指定idをリツイートする
 function reTweet(tweetID) {
 	client.post("statuses/retweet/:id", {
-		id: tweetIdList[tweetID - 1]
+		id: TweetIdListController.getID(tweetID)
 	}, (error) => {
 		if (!error) {
 			newline();
@@ -137,7 +132,7 @@ function reTweet(tweetID) {
 // 指定idをふぁぼる
 function favTweet(tweetID) {
 	client.post("favorites/create", {
-		id: tweetIdList[tweetID - 1]
+		id: TweetIdListController.getID(tweetID)
 	}, (error) => {
 		if (!error) {
 			newline();
@@ -289,7 +284,7 @@ function printUserName(tweet) {
 	//時刻表示
 	Term.dim("\t" + toLocaleString(new Date(tweet.created_at)));
 
-	Term.dim("\t No:" + tweetIdList.push(tweet.id_str));
+	Term.dim("\t No:" + TweetIdListController.addID(tweet.id_str));
 	newline();
 	return tweet;
 }
