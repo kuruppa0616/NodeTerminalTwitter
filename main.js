@@ -40,35 +40,10 @@ Term.on("key", (name) => {
 		//Tweet入力
 	} else if (name === "CTRL_T") {
 
-
 		TweetCacheController.setIsTweetCache(true);
 
 		Term.singleLineMenu(MenuItems, MenuOptions, (error, response) => {
-
-			switch (response.selectedIndex) {
-				case 0:
-					inputTweet([postTweet], "Input your kuso tweet");
-					break;
-
-				case 1:
-					inputTweet([reTweet], "Input tweet No");
-					break;
-
-				case 2:
-					inputTweet([favTweet], "Input tweet No");
-					break;
-
-				case 3:
-					inputTweet([reTweet, favTweet], "Input tweet No");
-					break;
-
-				case 4:
-					newline();
-					Term("Cancelled");
-					newline();
-					tweetPrinter.releaseCache();
-					break;
-			}
+			switchMenuProcess(response);
 		});
 	}
 });
@@ -76,75 +51,106 @@ Term.on("key", (name) => {
 //ストリーム開始
 startStream();
 
+async function switchMenuProcess(response) {
+
+	let temp;
+	switch (response.selectedIndex) {
+		case 0:
+			temp = await inputPost("Input your kuso tweet");
+			await postTweet(temp);
+			break;
+		case 1:
+			temp = await inputPost("Input tweet No");
+			await reTweet(temp);
+			break;
+		case 2:
+			temp = await inputPost("Input tweet No");
+			await favTweet(temp);
+			break;
+		case 3:
+			temp = await inputPost("Input tweet No");
+			await reTweet(temp);
+			await favTweet(temp);
+			break;
+		case 4:
+			newline();
+			Term("Cancelled");
+			newline();
+			break;
+	}
+	tweetPrinter.releaseCache();
+}
+
 //メイン処理ここまで
 
 
 //入力された値を、引数としてリストで受け取った関数に渡し実行する
-function inputTweet(funcList, message) {
-	newline();
-	Term(message + ":>>");
-	newline();
-	//入力フィールド表示
-	Term.inputField({
-		cancelable: true,
-		maxLength: 140
-	}, (error, input) => {
-		if (input) {
-			for (let func of funcList) {
-				func(input);
-			}
-		} else {
-			Term("Cancelled");
-			newline();
-		}
-		tweetPrinter.releaseCache();
+function inputPost(message) {
+	return new Promise(resolve => {
+		newline();
+		Term(message + ":>>");
+		newline();
+		//入力フィールド表示
+		Term.inputField({
+			cancelable: true,
+			maxLength: 140
+		}, (error, input) => {
+			resolve(input);
+		});
 	});
-
 }
 
 //Tweet投稿
 function postTweet(input) {
-
-	client.post("statuses/update", {
-		status: input
-	}, (error) => {
-		if (!error) {
-			newline();
-			Term("Tweet Success!");
-			newline();
-		} else {
-			Term(error);
-		}
+	return new Promise(resolve => {
+		client.post("statuses/update", {
+			status: input
+		}, (error) => {
+			if (!error) {
+				newline();
+				Term("Tweet Success!");
+				newline();
+			} else {
+				Term(error);
+			}
+			resolve();
+		});
 	});
 }
 
 //指定idをリツイートする
 function reTweet(tweetID) {
-	client.post("statuses/retweet/:id", {
-		id: TweetIdListController.getID(tweetID)
-	}, (error) => {
-		if (!error) {
-			newline();
-			Term("RT Success!");
-			newline();
-		} else {
-			Term(error);
-		}
+	return new Promise(resolve => {
+		client.post("statuses/retweet/:id", {
+			id: TweetIdListController.getID(tweetID)
+		}, (error) => {
+			if (!error) {
+				newline();
+				Term("RT Success!");
+				newline();
+			} else {
+				Term(error);
+			}
+			resolve();
+		});
 	});
 }
 
 // 指定idをふぁぼる
 function favTweet(tweetID) {
-	client.post("favorites/create", {
-		id: TweetIdListController.getID(tweetID)
-	}, (error) => {
-		if (!error) {
-			newline();
-			Term("Fav Success!");
-			newline();
-		} else {
-			Term(error);
-		}
+	return new Promise(resolve => {
+		client.post("favorites/create", {
+			id: TweetIdListController.getID(tweetID)
+		}, (error) => {
+			if (!error) {
+				newline();
+				Term("Fav Success!");
+				newline();
+			} else {
+				Term(error);
+			}
+			resolve();
+		});
 	});
 }
 
