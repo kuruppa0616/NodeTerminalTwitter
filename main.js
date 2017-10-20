@@ -5,10 +5,16 @@ console.log("Loading module...");
 const Term = require("terminal-kit").terminal;
 
 const Auth = require("./Auth");
+const PrintUtility = require("./PrintUtilities");
 const TweetCacheController = require("./TweetCacheController");
 const TweetIdListController = require("./TweetIdListController");
 const TweetPrinter = require("./TweetPrinter");
+const PostTwitter = require("./PostTwitter");
+
 const tweetPrinter = new TweetPrinter();
+const postTwitter = new PostTwitter();
+const printUtility = new PrintUtility();
+
 
 console.log(TweetIdListController.test);
 
@@ -26,7 +32,7 @@ const MenuOptions = {
 
 Term.windowTitle("NodeTerminalTwitter");
 Term.bold("START!!!");
-newline();
+printUtility.newline();
 
 //キー入力待受
 Term.grabInput();
@@ -57,25 +63,25 @@ async function switchMenuProcess(response) {
 	switch (response.selectedIndex) {
 		case 0:
 			temp = await inputPost("Input your kuso tweet");
-			await postTweet(temp);
+			await postTwitter.postTweet(temp);
 			break;
 		case 1:
 			temp = await inputPost("Input tweet No");
-			await reTweet(temp);
+			await postTwitter.reTweet(temp);
 			break;
 		case 2:
 			temp = await inputPost("Input tweet No");
-			await favTweet(temp);
+			await postTwitter.favTweet(temp);
 			break;
 		case 3:
 			temp = await inputPost("Input tweet No");
-			await reTweet(temp);
-			await favTweet(temp);
+			await postTwitter.reTweet(temp);
+			await postTwitter.favTweet(temp);
 			break;
 		case 4:
-			newline();
+			printUtility.newline();
 			Term("Cancelled");
-			newline();
+			printUtility.newline();
 			break;
 	}
 	tweetPrinter.releaseCache();
@@ -87,69 +93,15 @@ async function switchMenuProcess(response) {
 //入力された値を、引数としてリストで受け取った関数に渡し実行する
 function inputPost(message) {
 	return new Promise(resolve => {
-		newline();
+		printUtility.newline();
 		Term(message + ":>>");
-		newline();
+		printUtility.newline();
 		//入力フィールド表示
 		Term.inputField({
 			cancelable: true,
 			maxLength: 140
 		}, (error, input) => {
 			resolve(input);
-		});
-	});
-}
-
-//Tweet投稿
-function postTweet(input) {
-	return new Promise(resolve => {
-		client.post("statuses/update", {
-			status: input
-		}, (error) => {
-			if (!error) {
-				newline();
-				Term("Tweet Success!");
-				newline();
-			} else {
-				Term(error);
-			}
-			resolve();
-		});
-	});
-}
-
-//指定idをリツイートする
-function reTweet(tweetID) {
-	return new Promise(resolve => {
-		client.post("statuses/retweet/:id", {
-			id: TweetIdListController.getID(tweetID)
-		}, (error) => {
-			if (!error) {
-				newline();
-				Term("RT Success!");
-				newline();
-			} else {
-				Term(error);
-			}
-			resolve();
-		});
-	});
-}
-
-// 指定idをふぁぼる
-function favTweet(tweetID) {
-	return new Promise(resolve => {
-		client.post("favorites/create", {
-			id: TweetIdListController.getID(tweetID)
-		}, (error) => {
-			if (!error) {
-				newline();
-				Term("Fav Success!");
-				newline();
-			} else {
-				Term(error);
-			}
-			resolve();
 		});
 	});
 }
@@ -172,16 +124,11 @@ function startStream() {
 	});
 }
 
-//改行
-function newline() {
-	console.log();
-}
-
 //終了
 function terminate() {
 	Term.grabInput(false);
 	Term("good bye");
-	newline();
+	printUtility.newline();
 	setTimeout(function() {
 		process.exit();
 	}, 100);
