@@ -65,8 +65,8 @@ module.exports = class TweetPrinter {
 		//url取り出し
 		//短縮URLを元URLと置換
 		for (let url of tweet.entities.urls) {
-			syntax_list.push(url.display_url.replace("?", "\\?"));
-			text = text.replace(url.url, url.display_url);
+			syntax_list.push(url.expanded_url.replace("?", "\\?"));
+			text = text.replace(url.url, url.expanded_url);
 		}
 
 		//ハッシュタグ取り出し

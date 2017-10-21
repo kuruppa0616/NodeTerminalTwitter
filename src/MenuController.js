@@ -14,7 +14,7 @@ module.exports = class MenuController {
 		this.tweetPrinter = new TweetPrinter();
 		this.postTwitter = new PostTwitter();
 		this.printUtility = new PrintUtility();
-		this.MenuItems = ["Tweet", "RT", "Fav", "RT & Fav", "Cancel"];
+		this.MenuItems = ["Tweet", "Reply", "RT", "Fav", "RT & Fav", "Cancel"];
 		this.MenuOptions = {
 			style: Term.blue,
 			selectedStyle: Term.inverse,
@@ -45,26 +45,32 @@ module.exports = class MenuController {
 
 	async switchMenuProcess(response) {
 
-		let temp;
+		let id;
+		let str;
 		switch (response.selectedIndex) {
 			case 0:
-				temp = await this.inputPost("Input your kuso tweet");
-				await this.postTwitter.postTweet(temp);
+				str = await this.inputPost("Input your kuso tweet");
+				await this.postTwitter.postTweet(str);
 				break;
 			case 1:
-				temp = await this.inputPost("Input tweet No");
-				await this.postTwitter.reTweet(temp);
+				id = await this.inputPost("Input tweet No");
+				str = await this.inputPost("Input your kuso reply");
+				await this.postTwitter.reply(str, id);
 				break;
 			case 2:
-				temp = await this.inputPost("Input tweet No");
-				await this.postTwitter.favTweet(temp);
+				id = await this.inputPost("Input tweet No");
+				await this.postTwitter.reTweet(str);
 				break;
 			case 3:
-				temp = await this.inputPost("Input tweet No");
-				await this.postTwitter.reTweet(temp);
-				await this.postTwitter.favTweet(temp);
+				id = await this.inputPost("Input tweet No");
+				await this.postTwitter.favTweet(str);
 				break;
 			case 4:
+				id = await this.inputPost("Input tweet No");
+				await this.postTwitter.reTweet(str);
+				await this.postTwitter.favTweet(str);
+				break;
+			case 5:
 				this.printUtility.newline();
 				Term("Cancelled");
 				this.printUtility.newline();

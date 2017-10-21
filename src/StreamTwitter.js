@@ -20,9 +20,19 @@ module.exports = class StreamTwitter {
 				this.tweetPrinter.printTweet(tweet);
 			}
 		});
+
 		stream.on("error", (e) => {
 			console.log(e);
 		});
+
+		stream.on("disconnect", () => {
+			console.log("接続が切断されました。");
+		});
+
+		stream.on("resconnect", () => {
+			console.log("接続が再接続されました。");
+		});
+
 	}
 
 };

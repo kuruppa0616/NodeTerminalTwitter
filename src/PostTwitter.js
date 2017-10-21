@@ -26,8 +26,25 @@ module.exports = class PostTwitter {
 				resolve();
 			});
 		});
+	}
 
-
+	//Tweet投稿
+	reply(input, tweetID) {
+		return new Promise(resolve => {
+			Auth.getClient().post("statuses/update", {
+				status: input,
+				in_reply_to_status_id: TweetIdListController.getID(tweetID)
+			}, (error) => {
+				if (!error) {
+					this.printUtility.newline();
+					Term("Tweet Success!");
+					this.printUtility.newline();
+				} else {
+					Term(error);
+				}
+				resolve();
+			});
+		});
 	}
 
 	//指定idをリツイートする
