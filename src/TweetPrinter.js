@@ -25,6 +25,7 @@ module.exports = class TweetPrinter {
 	}
 
 	printRetweet(tweet) {
+
 		//リツートだったときは、名前を表示して元ツイートの詳細を表示
 		if (tweet.retweeted_status) {
 			Term.dim("RT:" + tweet.user.name + " Retweeted");
@@ -34,18 +35,30 @@ module.exports = class TweetPrinter {
 		return tweet;
 	}
 
-	//引用リツイート元を表示させる
-	printQuoted(tweet) {
-		//引用リツイートだった場合元ツイート表示
-		if (tweet.is_quote_status) {
-			tweet = tweet.quoted_status;
-			Term("Quoted>>");
-			this.printUtility.newline();
-			this.printUserName(tweet);
-			this.printBody(tweet);
-			this.printImage(tweet);
+	//ユーザーネーム表示
+	printUserName(tweet) {
+		Term.bold(tweet.user.name.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&"));
+
+		//公式アカウント判定
+		if (tweet.user.verified) {
+			Term(" ✔ ");
+
 		}
+		// 鍵アカウント判定
+		if (tweet.user.protected) {
+			Term(" 鍵 ");
+		}
+
+		//スクリーンネーム表示
+		Term.dim(" @" + tweet.user.screen_name);
+
+		//時刻表示
+		Term.dim("\t" + this.printUtility.toLocaleString(new Date(tweet.created_at)));
+
+		Term.dim("\t No:" + TweetIdListController.addID(tweet.id_str));
+		this.printUtility.newline();
 	}
+
 
 	//Tweet本文を表示する
 	printBody(tweet) {
@@ -99,33 +112,10 @@ module.exports = class TweetPrinter {
 		this.printUtility.newline();
 	}
 
-	//ユーザーネーム表示
-	printUserName(tweet) {
-		Term.bold(tweet.user.name);
 
-		//公式アカウント判定
-		if (tweet.user.verified) {
-			Term(" ✔ ");
-
-		}
-
-		// 鍵アカウント判定
-		if (tweet.user.protected) {
-			Term(" 鍵 ");
-		}
-
-		//スクリーンネーム表示
-		Term.dim(" @" + tweet.user.screen_name);
-
-		//時刻表示
-		Term.dim("\t" + this.printUtility.toLocaleString(new Date(tweet.created_at)));
-
-		Term.dim("\t No:" + TweetIdListController.addID(tweet.id_str));
-		this.printUtility.newline();
-	}
 
 	//画像表示
-	printImage(tweet) {
+	async printImage(tweet) {
 		//Tweetに画像が含まれるかの判定
 		if (this.isMedia(tweet)) {
 			//添付されてるメディア要素を全て取り出し
@@ -133,13 +123,25 @@ module.exports = class TweetPrinter {
 				//画像ならアスキー変換
 				if (medium.type == "photo") {
 					//アスキー変換のプロミス関数を登録
-					this.asciiPrinter.printAscii(medium);
+					await this.asciiPrinter.printAscii(medium);
 
 				}
 			}
 		}
 	}
 
+	//引用リツイート元を表示させる
+	printQuoted(tweet) {
+		//引用リツイートだった場合元ツイート表示
+		if (tweet.is_quote_status) {
+			tweet = tweet.quoted_status;
+			Term("Quoted>>");
+			this.printUtility.newline();
+			this.printUserName(tweet);
+			this.printBody(tweet);
+			this.printImage(tweet);
+		}
+	}
 	//Tweetにメディアが含まれているかの判定
 	isMedia(tweet) {
 		return tweet.extended_entities && tweet.extended_entities.media;

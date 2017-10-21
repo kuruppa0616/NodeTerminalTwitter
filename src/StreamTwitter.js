@@ -8,8 +8,8 @@ const TweetPrinter = require("./TweetPrinter");
 module.exports = class StreamTwitter {
 	constructor() {
 		this.tweetPrinter = new TweetPrinter();
-
 	}
+
 	startStream() {
 		let stream = Auth.getClient().stream("user");
 		stream.on("tweet", (tweet) => {

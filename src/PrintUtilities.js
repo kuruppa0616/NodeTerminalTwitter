@@ -3,7 +3,6 @@ const Term = require("terminal-kit").terminal;
 
 module.exports = class PrintUtility {
 
-
 	//画面幅一杯のラインを引く
 	drawBorderLine() {
 		Term.dim("―".repeat(Term.width));

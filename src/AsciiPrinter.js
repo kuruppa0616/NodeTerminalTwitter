@@ -10,17 +10,19 @@ module.exports = class AsciiPrinter {
 	}
 
 	printAscii(medium) {
-		ImageToAscii(medium.media_url + ":thumb", {
-			size: {
-				width: 30
-			}
-		}, (err, converted) => {
-			Term(err || converted);
-			this.printUtility.newline();
-			Term(medium.media_url);
-			this.printUtility.newline();
-			this.printUtility.drawBorderLine();
-
+		return new Promise(resolve => {
+			ImageToAscii(medium.media_url + ":thumb", {
+				size: {
+					width: 30
+				}
+			}, (err, converted) => {
+				Term(err || converted);
+				this.printUtility.newline();
+				Term(medium.media_url);
+				this.printUtility.newline();
+				this.printUtility.drawBorderLine();
+				resolve();
+			});
 		});
 	}
 };
