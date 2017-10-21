@@ -1,10 +1,10 @@
 /* eslint-disable no-console,indent */
 
 const Term = require("terminal-kit").terminal;
-const Auth = require("./Auth");
-const PrintUtility = require("./PrintUtilities");
-const StreamTwitter = require("./StreamTwitter");
-const MenuController = require("./MenuController");
+const Auth = require("./src/Auth");
+const PrintUtility = require("./src/PrintUtilities");
+const StreamTwitter = require("./src/StreamTwitter");
+const MenuController = require("./src/MenuController");
 
 class Index {
 	constructor() {
