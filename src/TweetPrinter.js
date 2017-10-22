@@ -103,16 +103,12 @@ module.exports = class TweetPrinter {
 					Term(str);
 				}
 			}
-
 			//ない場合は全部一気に表示
 		} else {
 			Term(text);
 		}
-
 		this.printUtility.newline();
 	}
-
-
 
 	//画像表示
 	async printImage(tweet) {
@@ -124,7 +120,6 @@ module.exports = class TweetPrinter {
 				if (medium.type == "photo") {
 					//アスキー変換のプロミス関数を登録
 					await this.asciiPrinter.printAscii(medium);
-
 				}
 			}
 		}
@@ -142,6 +137,7 @@ module.exports = class TweetPrinter {
 			this.printImage(tweet);
 		}
 	}
+
 	//Tweetにメディアが含まれているかの判定
 	isMedia(tweet) {
 		return tweet.extended_entities && tweet.extended_entities.media;

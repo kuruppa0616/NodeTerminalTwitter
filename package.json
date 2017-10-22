@@ -6,13 +6,13 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "node Index.js",
-		"setup":"npm i image-to-ascii  terminal-kit twit"
+		"setup": "npm i image-to-ascii  terminal-kit twit"
 	},
 	"author": "kuruppa0616",
 	"license": "",
 	"dependencies": {
-		"image-to-ascii": "^3.0.8",
-		"terminal-kit": "^1.13.11",
+		"image-to-ascii": "^3.0.9",
+		"terminal-kit": "^1.13.13",
 		"twit": "^2.2.9"
 	},
 	"devDependencies": {}
