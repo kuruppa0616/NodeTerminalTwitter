@@ -11,9 +11,9 @@
 	"author": "kuruppa0616",
 	"license": "",
 	"dependencies": {
-		"image-to-ascii": "^3.0.9",
-		"terminal-kit": "^1.13.13",
-		"twit": "^2.2.9"
+		"image-to-ascii": "^3.0.12",
+		"terminal-kit": "^1.26.10",
+		"twit": "^2.2.11"
 	},
 	"devDependencies": {}
 }
