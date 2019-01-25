@@ -3,7 +3,10 @@
 
 多分macでしか動きません。
 
+ユーザーストリーミングが死んだのでタイムラインの代わりに猫に関するツイートを流します。
+
 # Installation
+	$ brew install graphicsmagick
 	$ npm i 
 
 # Usage

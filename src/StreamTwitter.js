@@ -11,7 +11,7 @@ module.exports = class StreamTwitter {
 	}
 
 	startStream() {
-		let stream = Auth.getClient().stream("user");
+		const stream = Auth.getClient().stream('statuses/filter', { track: '猫' });
 		stream.on("tweet", (tweet) => {
 			// 入力状態のときはTweetを表示せずリストにキャッシュ
 			if (TweetCacheController.getIsTweetCache()) {
